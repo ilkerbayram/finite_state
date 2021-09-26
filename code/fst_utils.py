@@ -3,7 +3,7 @@ import string
 
 
 def create_alphabet(fname="alphabet.sym"):
-    with open("alphabet.sym", "w") as f:
+    with open(fname, "w") as f:
         f.write("<eps>\t0")
         f.write("\n<del>\t1")
         f.write("\n<ins>\t2")
@@ -48,7 +48,7 @@ def right_factor(symbols):
     comp = fst.Compiler(
         isymbols=symbols, osymbols=symbols, keep_isymbols=True, keep_osymbols=True
     )
-    for cnt, letter in enumerate(string.ascii_lowercase):
+    for letter in string.ascii_lowercase:
         for inp, val in [(letter, 0), ("<sub>", 0.5), ("<ins>", 0.5)]:
             comp.write(f"0 0 {inp} {letter} {val}")
     comp.write("0 0 <del> <eps> 0.5")
@@ -63,7 +63,7 @@ def left_factor(symbols):
     comp = fst.Compiler(
         isymbols=symbols, osymbols=symbols, keep_isymbols=True, keep_osymbols=True
     )
-    for cnt, letter in enumerate(string.ascii_lowercase):
+    for letter in string.ascii_lowercase:
         for inp, val in [(letter, 0), ("<sub>", 0.5), ("<del>", 0.5)]:
             comp.write(f"0 0 {letter} {inp} {val}")
     comp.write("0 0 <eps> <ins> 0.5")

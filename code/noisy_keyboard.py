@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 """
-this script computes the edit distance between 
-a user provided (input,target) pair
+computes the edit distance between
+a user provided (input, target) pair,
+where the penalty between nearby letters
+is smaller than other letter replacements.
 
 Ilker Bayram, ibayram@ieee.org, 2021
 """
@@ -11,40 +13,37 @@ import argparse
 import pywrapfst as fst
 
 from fst_utils import (
-    create_alphabet,
-    create_word_fst,
+    keyboard_layout,
+    replacement_cost,
+    noisy_left_factor,
     right_factor,
-    left_factor,
+    create_alphabet,
     print_result,
+    create_word_fst,
 )
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="computes the edit distance between an input and a target"
+        description="computes the edit distance between"
+        " an input and a target using a noisy keyboard model"
     )
     parser.add_argument("input", help="input")
     parser.add_argument("target", help="target")
-    parser.add_argument(
-        "-c",
-        "--create",
-        help="create symbol file for the alphabet",
-        action="store_true",
-    )
     return parser.parse_args()
 
 
 def main():
     args = parse_args()
+
+    # set path, filename for the symboltable
     folder = join("..", "symbols")
     fname = "alphabet.sym"
     fname = join(folder, fname)
-    print(fname)
-    # if the user asked for it, or if it does not already exist,
-    # create symbols for the alphabet
-    if args.create:
-        create_alphabet(fname=fname)
-    elif not exists(fname):
+
+    # create symbols for the alphabet,
+    # if it doesn't exist
+    if not exists(fname):
         print(f"{fname} does not exist, creating...")
         create_alphabet(fname=fname)
 
@@ -57,7 +56,11 @@ def main():
 
     # create the right and left factor FSTs
     right = right_factor(isym)
-    left = left_factor(isym)
+
+    # create the special left factor, adapted to the keyboard
+    layout = keyboard_layout()
+    cost = replacement_cost(layout=layout, threshold=1.9)
+    left = noisy_left_factor(symbols=isym, cost=cost)
 
     # compose the right FSTs and the left FSTs
     right_full = fst.compose(right, word_right)
@@ -73,7 +76,7 @@ def main():
     print_result(path, isymbols=isym, osymbols=isym)
 
     dist = fst.shortestdistance(path)
-    print(f"\nTotal Edit Distance : {int(dist[-1].__float__())}\n")
+    print(f"\nTotal Edit Distance : {float(dist[-1].__float__())}\n")
 
     return None
 

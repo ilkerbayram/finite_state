@@ -29,6 +29,23 @@ def keyboard_layout():
     return layout
 
 
+def replacement_cost_numerical(input, target, threshold):
+    """
+    returns a dictionary where each key is an element from the input,
+    each value is a dictionary.
+    For instance for the key '1.0' from input, the dictionary consists of
+    the distance of '1.0' to the elements in the target if they do not exceed 
+    the threshold
+    """
+    cost = {
+        str(x): {
+            str(y): np.abs(x - y) for y in set(target) if np.abs(x - y) < threshold
+        }
+        for x in set(input)
+    }
+    return cost
+
+
 def replacement_cost(layout: dict, threshold: float):
     """
     returns a dictionary where each key is a letter.
@@ -61,6 +78,17 @@ def create_alphabet(fname="alphabet.sym"):
         f.write("\n<sub>\t3")
         for ind, letter in enumerate(string.ascii_lowercase):
             f.write(f"\n{letter}\t{ind+4}")
+    return None
+
+
+def create_numerical_alphabet(sequences, fname="numerical.sym"):
+    with open(fname, "w") as f:
+        f.write("<eps>\t0")
+        f.write("\n<del>\t1")
+        f.write("\n<ins>\t2")
+        f.write("\n<sub>\t3")
+        for ind, num in enumerate(sequences):
+            f.write(f"\n{num}\t{ind+4}")
     return None
 
 
@@ -107,6 +135,21 @@ def right_factor(symbols):
     return comp.compile()
 
 
+def right_factor_numerical(symbols, target):
+    """
+    create a right factor for edit distance computation on numerical sequences
+    """
+    comp = fst.Compiler(
+        isymbols=symbols, osymbols=symbols, keep_isymbols=True, keep_osymbols=True
+    )
+    for num in set(target):
+        for inp, val in [(num, 0), ("<sub>", 0.5), ("<ins>", 0.5)]:
+            comp.write(f"0 0 {inp} {num} {val}")
+    comp.write("0 0 <del> <eps> 0.5")
+    comp.write("0")
+    return comp.compile()
+
+
 def left_factor(symbols):
     """
     create a right factor fst for edit distance computation
@@ -137,6 +180,26 @@ def noisy_left_factor(symbols, cost: dict):
         # add 'sub' and 'del'
         for inp, val in [("<sub>", 0.5), ("<del>", 0.5)]:
             comp.write(f"0 0 {letter} {inp} {val}")
+    comp.write("0 0 <eps> <ins> 0.5")
+    comp.write("0")
+    return comp.compile()
+
+
+def noisy_left_factor_numerical(symbols, cost: dict):
+    """
+    create left factor
+    given a cost dictionary like one produced by the function
+    replacement_cost_numerical
+    """
+    comp = fst.Compiler(
+        isymbols=symbols, osymbols=symbols, keep_isymbols=True, keep_osymbols=True
+    )
+    for key, distance_dict in cost.items():
+        for transition, penalty in distance_dict.items():
+            comp.write(f"0 0 {key} {transition} {penalty}")
+        # add 'sub' and 'del'
+        for inp, val in [("<sub>", 0.5), ("<del>", 0.5)]:
+            comp.write(f"0 0 {key} {inp} {val}")
     comp.write("0 0 <eps> <ins> 0.5")
     comp.write("0")
     return comp.compile()

@@ -10,7 +10,7 @@ def print_result(path, isymbols, osymbols):
     for st in path.states():
         for arc in path.arcs(st):
             print(
-                f"{isymbols.find(arc.ilabel)}\t->\t{osymbols.find(arc.olabel)},\tcost : {arc.weight}"
+                f"{isymbols.find(arc.ilabel)}\t->\t{osymbols.find(arc.olabel)},\tcost : {arc.weight.__float__():.3f}"
             )
 
     return None

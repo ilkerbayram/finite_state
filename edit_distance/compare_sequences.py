@@ -35,9 +35,19 @@ def parse_args():
     )
     return parser.parse_args()
 
-
-def main():
-    args = parse_args()
+def transform_cost(input, target, distance_threshold = 1):
+    """
+    computes the cost of transforming the input 
+    sequence to the target sequence
+    
+    variables : 
+    input - list of numbers
+    target - list of numbers
+    
+    output :  
+    total_distance - minimum distance between the input and the target
+    path - the path achieving the minimum cost
+    """
 
     # set path, filename for the symboltable
     folder = join("..", "symbols")
@@ -45,24 +55,24 @@ def main():
     fname = join(folder, fname)
 
     # create symbols for the numbers,
-    create_numerical_alphabet(set(args.input + args.target), fname=fname)
+    create_numerical_alphabet(set(input + target), fname=fname)
 
     # create a SymbolTable object
     isym = fst.SymbolTable.read_text(fname)
 
-    str_input = [str(x) for x in args.input]
-    str_target = [str(x) for x in args.target]
+    str_input = [str(x) for x in input]
+    str_target = [str(x) for x in target]
 
     # create the right and left word FST's
     word_right = create_word_fst(word=str_target, symbols=isym)
     word_left = create_word_fst(word=str_input, symbols=isym)
 
     # create the right and left factor FSTs
-    right = right_factor_numerical(isym, target=args.target)
+    right = right_factor_numerical(isym, target=target)
 
     # create the special left factor, adapted to the keyboard
     cost = replacement_cost_numerical(
-        input=args.input, target=args.target, threshold=args.distance_thold
+        input=input, target=target, threshold=distance_threshold
     )
 
     left = noisy_left_factor_numerical(symbols=isym, cost=cost)
@@ -77,11 +87,26 @@ def main():
     path.rmepsilon()
     path.topsort()
 
-    print("\nTransition : \n")
-    print_result(path, isymbols=isym, osymbols=isym)
-
+    best_path = {"path" : path, "isymbols" : isym, "osymbols":isym}
+    
     dist = fst.shortestdistance(path)
-    print(f"\nTotal Edit Distance : {float(dist[-1].__float__())}\n")
+    total_distance = float(dist[-1].__float__())
+    
+    return total_distance, best_path
+
+def main():
+    """
+    computes the minimum distance between the input and target
+    also prints the min distance achieving path
+    """
+    args = parse_args()
+    distance, path = transform_cost(input = args.input, target = args.target)
+    
+    
+    print("\nTransition : \n")
+    print_result(**path)
+
+    print(f"\nTotal Edit Distance : {distance:.3f}\n")
 
     return None
 

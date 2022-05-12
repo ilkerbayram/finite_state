@@ -12,7 +12,7 @@ from os.path import exists, join
 import argparse
 import pywrapfst as fst
 
-from fst_utils import (
+from edit_distance.fst_utils import (
     keyboard_layout,
     replacement_cost,
     noisy_left_factor,

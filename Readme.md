@@ -3,11 +3,11 @@ This repo demonstrates the use of the python wrapper around `openfst`, namely `p
 
 For now, there are two scripts `edit_distance.py`, `noisy_keyboard.py` under `./code` that can be run.
 
-## `edit_distance.py` 
+## `min_edit_distance.py` 
 This script computes the edit distance between a user specified (input, target) pair.
 It can be run under `./code` as
 
-    ./edit_distance.py actag ctagc
+    ./min_edit_distance.py actag ctagc
 
 The script computes the edit distance between the input `actag` and the target `ctagc`, and shows the edit distance along with an explanation of the transitions one needs to make to achieve that score.
 
@@ -23,7 +23,7 @@ The script computes the edit distance between the input `actag` and the target `
     Total Edit Distance : 2
 
 ## `noisy_keyboard.py`
-This script is very similar to `edit_distance.py`, but uses a "noisy keyboard" model. The replacement of a key with a nearby key is penalized less than an arbitrary replacement. For instance, it costs less to replace **d** with **f**, than replacing it with  **h**.
+This script is very similar to `min_edit_distance.py`, but uses a "noisy keyboard" model. The replacement of a key with a nearby key is penalized less than an arbitrary replacement. For instance, it costs less to replace **d** with **f**, than replacing it with  **h**.
 
 Here's a sample run : 
 

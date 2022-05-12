@@ -10,7 +10,7 @@ from os.path import exists, join
 import argparse
 import pywrapfst as fst
 
-from fst_utils import (
+from edit_distance.fst_utils import (
     create_alphabet,
     create_word_fst,
     right_factor,

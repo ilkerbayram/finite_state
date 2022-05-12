@@ -9,9 +9,9 @@ Ilker Bayram, ibayram@ieee.org, 2022
 from os.path import exists, join
 import argparse
 import pywrapfst as fst
+from os import remove
 
-from fst_utils import (
-    keyboard_layout,
+from edit_distance.fst_utils import (
     replacement_cost_numerical,
     noisy_left_factor_numerical,
     right_factor_numerical,
@@ -35,7 +35,8 @@ def parse_args():
     )
     return parser.parse_args()
 
-def transform_cost(input, target, distance_threshold = 1):
+
+def transform_cost(input, target, distance_threshold=1):
     """
     computes the cost of transforming the input 
     sequence to the target sequence
@@ -50,15 +51,15 @@ def transform_cost(input, target, distance_threshold = 1):
     """
 
     # set path, filename for the symboltable
-    folder = join("..", "symbols")
-    fname = "numbers.sym"
-    fname = join(folder, fname)
-
+    fname = "temp.sym"
     # create symbols for the numbers,
     create_numerical_alphabet(set(input + target), fname=fname)
 
     # create a SymbolTable object
     isym = fst.SymbolTable.read_text(fname)
+
+    # delete the symbol file, as it cannot be used again
+    remove(fname)
 
     str_input = [str(x) for x in input]
     str_target = [str(x) for x in target]
@@ -87,12 +88,13 @@ def transform_cost(input, target, distance_threshold = 1):
     path.rmepsilon()
     path.topsort()
 
-    best_path = {"path" : path, "isymbols" : isym, "osymbols":isym}
-    
+    best_path = {"path": path, "isymbols": isym, "osymbols": isym}
+
     dist = fst.shortestdistance(path)
     total_distance = float(dist[-1].__float__())
-    
+
     return total_distance, best_path
+
 
 def main():
     """
@@ -100,9 +102,8 @@ def main():
     also prints the min distance achieving path
     """
     args = parse_args()
-    distance, path = transform_cost(input = args.input, target = args.target)
-    
-    
+    distance, path = transform_cost(input=args.input, target=args.target)
+
     print("\nTransition : \n")
     print_result(**path)
 

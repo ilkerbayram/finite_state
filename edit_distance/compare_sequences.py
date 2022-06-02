@@ -36,18 +36,40 @@ def parse_args():
     return parser.parse_args()
 
 
-def transform_cost(input, target, distance_threshold=1):
+def transform_cost(
+    input,
+    target,
+    distance_threshold=1,
+    miss_penalty=1,
+    insertion_penalty=1,
+    deletion_penalty=1,
+):
     """
     computes the cost of transforming the input 
     sequence to the target sequence
+
+    transforming is performed via three operations with different costs
+    1. changing an element of the input, x, to an element of the target, y,
+        with penalty P(x,y) given as
+            abs(x-y), if abs(x-y) < distance_threshold,
+            miss_penalty, otherwise
+    2. inserting an arbitrary element into the input
+        with a penalty of insertion_penalty
+    3. deletion of an arbitrary element from the input
+        with a penalty of deletion_penalty
     
     variables : 
     input - list of numbers
     target - list of numbers
+    distance_threshold - determines if two numbers match
+    miss_penalty - penalty for individual mismatch
+    insertion_penalty - penalty for inserting an arbitrary number in input
+    deletion_penalty - penalty for removing an arbitrary number from input
     
     output :  
     total_distance - minimum distance between the input and the target
-    path - the path achieving the minimum cost
+    path - the path achieving the minimum cost, 
+        can be printed using print_result
     """
 
     # set path, filename for the symboltable
@@ -69,14 +91,26 @@ def transform_cost(input, target, distance_threshold=1):
     word_left = create_word_fst(word=str_input, symbols=isym)
 
     # create the right and left factor FSTs
-    right = right_factor_numerical(isym, target=target)
+    right = right_factor_numerical(
+        isym,
+        target=target,
+        miss_penalty=miss_penalty,
+        insertion_penalty=insertion_penalty,
+        deletion_penalty=deletion_penalty,
+    )
 
     # create the special left factor, adapted to the keyboard
     cost = replacement_cost_numerical(
-        input=input, target=target, threshold=distance_threshold
+        input=input, target=target, distance_threshold=distance_threshold
     )
 
-    left = noisy_left_factor_numerical(symbols=isym, cost=cost)
+    left = noisy_left_factor_numerical(
+        symbols=isym,
+        cost=cost,
+        miss_penalty=miss_penalty,
+        insertion_penalty=insertion_penalty,
+        deletion_penalty=deletion_penalty,
+    )
 
     # compose the right FSTs and the left FSTs
     right_full = fst.compose(right, word_right)

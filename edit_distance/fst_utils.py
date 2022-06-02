@@ -29,17 +29,25 @@ def keyboard_layout():
     return layout
 
 
-def replacement_cost_numerical(input, target, threshold):
+def replacement_cost_numerical(input, target, distance_threshold=1.0):
     """
     returns a dictionary where each key is an element from the input,
     each value is a dictionary.
+
     For instance for the key '1.0' from input, the dictionary consists of
     the distance of '1.0' to the elements in the target if they do not exceed 
-    the threshold
+    distance_threshold
+
+    input variables:
+    input - list of numbers
+    target - list of numbers
+    distance_threshold - threshold for deciding if two numbers match
     """
     cost = {
         str(x): {
-            str(y): np.abs(x - y) for y in set(target) if np.abs(x - y) < threshold
+            str(y): np.abs(x - y)
+            for y in set(target)
+            if np.abs(x - y) < distance_threshold
         }
         for x in set(input)
     }
@@ -135,7 +143,9 @@ def right_factor(symbols):
     return comp.compile()
 
 
-def right_factor_numerical(symbols, target):
+def right_factor_numerical(
+    symbols, target, miss_penalty=1.0, insertion_penalty=1.0, deletion_penalty=1.0
+):
     """
     create a right factor for edit distance computation on numerical sequences
     """
@@ -143,9 +153,13 @@ def right_factor_numerical(symbols, target):
         isymbols=symbols, osymbols=symbols, keep_isymbols=True, keep_osymbols=True
     )
     for num in set(target):
-        for inp, val in [(num, 0), ("<sub>", 0.5), ("<ins>", 0.5)]:
+        for inp, val in [
+            (num, 0),
+            ("<sub>", miss_penalty / 2),
+            ("<ins>", insertion_penalty / 2),
+        ]:
             comp.write(f"0 0 {inp} {num} {val}")
-    comp.write("0 0 <del> <eps> 0.5")
+    comp.write(f"0 0 <del> <eps> {deletion_penalty/2}")
     comp.write("0")
     return comp.compile()
 
@@ -185,7 +199,9 @@ def noisy_left_factor(symbols, cost: dict):
     return comp.compile()
 
 
-def noisy_left_factor_numerical(symbols, cost: dict):
+def noisy_left_factor_numerical(
+    symbols, cost: dict, miss_penalty=1.0, insertion_penalty=1.0, deletion_penalty=1.0
+):
     """
     create left factor
     given a cost dictionary like one produced by the function
@@ -198,8 +214,8 @@ def noisy_left_factor_numerical(symbols, cost: dict):
         for transition, penalty in distance_dict.items():
             comp.write(f"0 0 {key} {transition} {penalty}")
         # add 'sub' and 'del'
-        for inp, val in [("<sub>", 0.5), ("<del>", 0.5)]:
+        for inp, val in [("<sub>", miss_penalty / 2), ("<del>", deletion_penalty / 2)]:
             comp.write(f"0 0 {key} {inp} {val}")
-    comp.write("0 0 <eps> <ins> 0.5")
+    comp.write(f"0 0 <eps> <ins> {insertion_penalty/2}")
     comp.write("0")
     return comp.compile()
